@@ -1,51 +1,71 @@
 import React from "react";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
 import { Bar } from "react-chartjs-2";
-import faker from "faker";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
-
-export const options = {
-  responsive: true,
-  plugins: {
-    legend: {
-      position: "top",
+import { getDay, getMonth, getYear } from "../../utils/getMonth";
+import { ramdomColor } from "../../utils/ramdomColor";
+export const Graphics = ({ e, type, search }) => {
+  let title = "";
+  if (type === 1) {
+    title = e.type;
+  }
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+        text: title,
+      },
     },
-    title: {
-      display: true,
-      text: "Chart.js Bar Chart",
-    },
-  },
-};
+  };
+  let labels = [];
+  if (type === 1 && search.timeTrunc == "month") {
+    labels = e.attributes.content[0].attributes.values.map((e) =>
+      getMonth(e.datetime)
+    );
+  } else if (type === 1 && search.timeTrunc == "day") {
+    labels = e.attributes.content[0].attributes.values.map((e) =>
+      getDay(e.datetime)
+    );
+  } else if (type === 1 && search.timeTrunc == "year") {
+    labels = e.attributes.content[0].attributes.values.map((e) =>
+      getYear(e.datetime)
+    );
+  } else if (type === 2 && search.timeTrunc == "day") {
+    labels = e.attributes.values.map((e) => getDay(e.datetime));
+  } else if (type === 2 && search.timeTrunc == "month") {
+    labels = e.attributes.values.map((e) => getMonth(e.datetime));
+  } else if (type === 2 && search.timeTrunc == "year") {
+    labels = e.attributes.values.map((e) => getYear(e.datetime));
+  }
 
-const labels = ["Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre"];
+  let superdato = {};
+  let prueba = [];
+  if (type === 1) {
+    superdato = e.attributes.content.map((e) => e.attributes);
+    prueba = superdato.map((e, index) => {
+      return {
+        label: superdato[index].title,
+        data: e.values.map((e) => e.value),
+        backgroundColor: ramdomColor(),
+      };
+    });
+  }
+  if (type === 2) {
+    prueba = [
+      {
+        label: e.attributes.title,
+        data: e.attributes.values.map((e) => e.value),
+        backgroundColor: ramdomColor(),
+      },
+    ];
+  }
 
-export const data = {
-  labels,
-  datasets: [
-    {
-      label: "Dataset 1",
-      data: labels.map(() => faker.datatype.number({ min: 0, max: 1000 })),
-      backgroundColor: "rgba(255, 99, 132, 0.5)",
-    },
-  ],
-};
+  const data = {
+    labels,
+    datasets: prueba,
+  };
 
-export function App({}) {
   return <Bar options={options} data={data} />;
-}
+};

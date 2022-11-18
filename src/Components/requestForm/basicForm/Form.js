@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import categoriesJson from "../../../category/category.json";
 import "./form.scss";
-import axios from "axios";
+import Swal from "sweetalert2";
 import {
   Box,
   Container,
@@ -28,7 +28,11 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { Bar } from "react-chartjs-2";
+
+import { getData } from "../../../helpers/getDataHelper";
+import { getResType } from "../../../utils/getResType";
+import { getDay, getMonth, getYear } from "../../../utils/getMonth";
+import { Graphics } from "../../graphics/Graphics";
 
 ChartJS.register(
   CategoryScale,
@@ -43,9 +47,9 @@ const initialValue = {
   lang: "",
   category: "",
   widget: "",
-  starDate: "",
-  endDate: "",
-  timeTrunc: "",
+  startDate: "2022/11/01",
+  endDate: "2022/11/15",
+  timeTrunc: "day",
   geoTrunc: "",
   geoLimit: "",
   geoIds: "",
@@ -58,35 +62,11 @@ export const BasicForm = () => {
 
   const [widges, setWidges] = useState([]);
 
-  const [energia1, setEnergia1] = useState([]);
-
-  const [energia2, setEnergia2] = useState([]);
-
-  const [energia3, setEnergia3] = useState([]);
-
-  const [energia4, setEnergia4] = useState([]);
-
-  const [energia5, setEnergia5] = useState([]);
-
-  const [energia6, setEnergia6] = useState([]);
-
-  const [energia7, setEnergia7] = useState([]);
-
-  const [title1, setTitle1] = useState("");
-
-  const [title2, setTitle2] = useState("");
-
-  const [title3, setTitle3] = useState("");
-
-  const [title4, setTitle4] = useState("");
-
-  const [title5, setTitle5] = useState("");
-
-  const [title6, setTitle6] = useState("");
-
-  const [title7, setTitle7] = useState("");
-
   const [type, setType] = useState(0);
+
+  const [value, setValue] = useState({ typeResp: "", data: [] });
+
+  const [error, setError] = useState();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -96,7 +76,6 @@ export const BasicForm = () => {
       setType(0);
     }
 
-    // console.log(filter(categories, value));
     if (name === "category") {
       setWidges(filter(categories, value));
     }
@@ -106,124 +85,31 @@ export const BasicForm = () => {
 
   const onFormSubmit = (e) => {
     e.preventDefault();
-    // console.log(search);
-    let url = `https://apidatos.ree.es/${search.lang}/datos/${search.category}/${search.widget}?start_date=2022-05-01&end_date=2022-10-31&time_trunc=month`;
-    axios
-      .get(url)
+    let url = `https://apidatos.ree.es/${search.lang}/datos/${search.category}/${search.widget}?start_date=${search.startDate}T00:00&end_date=${search.endDate}T23:59&time_trunc=${search.timeTrunc}`;
 
-      .then((res) => {
-        setEnergia1(
-          res.data.included[type].attributes.content[0].attributes.values
-        );
+    const getValues = async () => {
+      const response = await getData(url);
+      if (response.status === 200) {
+        const typeResp = getResType(response.data);
+        if (typeResp === 1) {
+          setValue({ type: 1, data: response.data.included });
+        } else if (typeResp === 2) {
+          setValue({ type: 2, data: response.data.included });
+        } else {
+          setValue({ type: 0, data: [] });
+        }
+      } else {
+        setError(response.response.data.errors[0].detail);
+        // alert(response.response.data.errors[0].detail);
+        Swal.fire({
+          showConfirmButton: true,
+          icon: "error",
+          text: response.response.data.errors[0].detail,
+        });
+      }
+    };
 
-        setEnergia2(
-          res.data.included[type].attributes.content[1].attributes.values
-        );
-
-        setEnergia3(
-          res.data.included[type].attributes.content[2].attributes.values
-        );
-
-        setEnergia4(
-          res.data.included[type].attributes.content[3].attributes.values
-        );
-        setEnergia5(
-          res.data.included[type].attributes.content[4].attributes.values
-        );
-        setEnergia6(
-          res.data.included[type].attributes.content[5].attributes.values
-        );
-        setEnergia7(
-          res.data.included[type].attributes.content[6].attributes.values
-        );
-
-        setTitle1(
-          res.data.included[type].attributes.content[0].attributes.title
-        );
-
-        setTitle2(
-          res.data.included[type].attributes.content[1].attributes.title
-        );
-
-        setTitle3(
-          res.data.included[type].attributes.content[2].attributes.title
-        );
-        setTitle4(
-          res.data.included[type].attributes.content[3].attributes.title
-        );
-        setTitle5(
-          res.data.included[type].attributes.content[4].attributes.title
-        );
-        setTitle6(
-          res.data.included[type].attributes.content[5].attributes.title
-        );
-        setTitle7(
-          res.data.included[type].attributes.content[6].attributes.title
-        );
-
-        // console.log(url);
-        // console.log(res.data);
-      })
-
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      title: {
-        display: true,
-        text: "Chart.js Bar Chart",
-      },
-    },
-  };
-
-  const labels = ["Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre"];
-
-  const data = {
-    labels,
-    datasets: [
-      {
-        label: title1,
-        data: labels.map((month, index) => energia1[index]?.value),
-        backgroundColor: "rgba(255, 99, 132, 0.5)",
-      },
-      {
-        label: title2,
-        data: labels.map((month, index) => energia2[index]?.value),
-        backgroundColor: "rgba(1, 98, 194, 0.5)",
-      },
-      {
-        label: title3,
-        data: labels.map((month, index) => energia3[index]?.value),
-        backgroundColor: "rgba(127, 0, 254, 0.5)",
-      },
-      {
-        label: title4,
-        data: labels.map((month, index) => energia4[index]?.value),
-        backgroundColor: "rgba(58, 240, 9, 0.5)",
-      },
-      {
-        label: title5,
-        data: labels.map((month, index) => energia5[index]?.value),
-        backgroundColor: "rgba(1, 143, 255, 0.5)",
-      },
-      {
-        label: title6,
-        data: labels.map((month, index) => energia6[index]?.value),
-        backgroundColor: "rgba(236, 255, 1, 0.5)",
-      },
-      {
-        label: title7,
-        data: labels.map((month, index) => energia7[index]?.value),
-        backgroundColor: "rgba(100, 100, 100, 0.5)",
-      },
-    ],
+    getValues();
   };
 
   return (
@@ -235,11 +121,10 @@ export const BasicForm = () => {
           display: "flex",
           flexGrow: 1,
           minHeight: "100%",
-          backgroundColor: "#D7E7F7",
-          height: 1000,
+          background: "linear-gradient(to bottom, pink, white);",
         }}
       >
-        <Container maxWidth="sm">
+        <Container maxWidth="xs">
           <form onSubmit={onFormSubmit}>
             <Box
               sx={{
@@ -247,12 +132,12 @@ export const BasicForm = () => {
               }}
             >
               <Typography color="textPrimary" variant="h4" align="center">
-                Comparativa de los ultimos 6 meses de 2022
+                Gráficos comparativos de la red eléctrica
               </Typography>
             </Box>
             <Box
               sx={{
-                bgcolor: "#017DF8",
+                bgcolor: "pink",
                 my: 3,
               }}
             >
@@ -265,7 +150,6 @@ export const BasicForm = () => {
               <InputLabel id="language">Idioma</InputLabel>
               <Select
                 name="lang"
-                labelId="language"
                 id="language"
                 value={search.lang}
                 label="language"
@@ -280,7 +164,6 @@ export const BasicForm = () => {
               <InputLabel id="category">Categoria</InputLabel>
               <Select
                 name="category"
-                labelId="category"
                 id="category"
                 value={search.category}
                 label="category"
@@ -300,7 +183,6 @@ export const BasicForm = () => {
               <InputLabel id="widget">Widget</InputLabel>
               <Select
                 name="widget"
-                labelId="widget"
                 id="widget"
                 value={search.widget}
                 label="widget"
@@ -316,23 +198,50 @@ export const BasicForm = () => {
               </Select>
             </FormControl>
 
+            <FormControl fullWidth sx={{ marginBottom: 2 }}>
+              <TextField
+                name="startDate"
+                id="startDate"
+                label="Fecha de inicio"
+                type="date"
+                onChange={handleChange}
+                value={search.startDate}
+              ></TextField>
+            </FormControl>
+
+            <FormControl fullWidth sx={{ marginBottom: 2 }}>
+              <TextField
+                name="endDate"
+                id="endDate"
+                label="Fecha final"
+                type="date"
+                value={search.endDate}
+                onChange={handleChange}
+              ></TextField>
+            </FormControl>
+
             <FormControl>
-              <FormLabel id="tipoDeEnergia">Tipo de energia</FormLabel>
+              <FormLabel id="time_trunc">Medición de tiempo</FormLabel>
               <RadioGroup
-                aria-labelledby="energicType"
-                defaultValue="renovable"
-                name="tipoDeEnergia"
+                aria-labelledby="time_trunc"
+                defaultValue="day"
+                name="timeTrunc"
                 onChange={handleChange}
               >
                 <FormControlLabel
-                  value="renovable"
+                  value="day"
                   control={<Radio />}
-                  label="renovable"
+                  label="Días"
                 />
                 <FormControlLabel
-                  value="noRenovable"
+                  value="month"
                   control={<Radio />}
-                  label="No renovalbe"
+                  label="Meses"
+                />
+                <FormControlLabel
+                  value="year"
+                  control={<Radio />}
+                  label="Años"
                 />
               </RadioGroup>
             </FormControl>
@@ -348,9 +257,24 @@ export const BasicForm = () => {
               </Button>
             </Box>
           </form>
-          <Bar options={options} data={data} />
         </Container>
       </Box>
+      <Box
+        backgroundColor="#D7E7F7"
+        display="flex"
+        justifyContent="center"
+        marginRight="auto"
+        marginLeft="auto"
+        marginTop="1%"
+        flexDirection="column"
+        alignItems="center"
+        width="75%"
+      >
+        {value.data.map((e) => (
+          <Graphics e={e} type={value.type} search={search} />
+        ))}
+      </Box>
+
       <Box
         component="main"
         sx={{
