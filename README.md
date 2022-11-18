@@ -1,3 +1,14 @@
+#Prueba de Front con llamada a una API pública de energía eléctrica.
+
+#La llamada está configurada para todas las posibilidades o la mayoría de ellas. 
+
+#Todas las fechas disponibles, si la app no lo permite saldra un cartel del error concreto.
+
+#El diseño es muy rudimentario, pero quería terminar y detallar la funcionalidad primero.
+
+#Seguir las instrucciones para una adecuada instalación y funcionamiento.
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
